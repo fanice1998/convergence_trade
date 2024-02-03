@@ -4,7 +4,7 @@ function klineData(url, symbol, interval) {
     const options = {
         hostname: url,
         port: 443,
-        path: '/api/v3/klines?symbol=${symbol}&interval=${interval}',
+        path: `/api/v3/klines?symbol=${symbol}&interval=${interval}`,
         method: 'get',
     }
 
@@ -26,4 +26,4 @@ function klineData(url, symbol, interval) {
     return "hi"
 }
 
-module.exports = {klineData}
+module.exports = {KlineData:klineData}

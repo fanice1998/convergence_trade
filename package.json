@@ -1,0 +1,25 @@
+{
+  "name": "convergence_trade",
+  "version": "1.0.0",
+  "description": "convergence_trade",
+  "main": "main.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fanice1998/convergence_trade.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fanice1998/convergence_trade/issues"
+  },
+  "homepage": "https://github.com/fanice1998/convergence_trade#readme"
+}
