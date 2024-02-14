@@ -1,5 +1,9 @@
 const binanceData = require('./binance/klineData.js');
-const tools = require("./tools/tools");
+// const tools = require("./tools/tools");
 
-binanceData.KlineData("api3.binance.com", "ETHUSDT","1h");
-tools.DrawCandlistick()
+symbols = ["ETHUSDT", "OPUSDT", "BTCUSDT", "SUIUSDT"]
+for (const symbol of symbols) {
+    binanceData.KlineData("api3.binance.com", symbol, "1h")
+}
+// binanceData.KlineData("api3.binance.com", "ETHUSDT","1h");
+// tools.DrawCandlistick()
