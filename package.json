@@ -19,5 +19,8 @@
   "homepage": "https://github.com/fanice1998/convergence_trade#readme",
   "devDependencies": {
     "mocha": "^10.2.0"
+  },
+  "dependencies": {
+    "canvas": "^2.11.2"
   }
 }
