@@ -1,1 +1,0 @@
-const platfrom = require("")
