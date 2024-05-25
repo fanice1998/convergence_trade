@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"github.com/data"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	data.Test("kline", "SUIUSDT", "1h")
 }

@@ -1,12 +1,14 @@
 package data
 
 import (
+	"archive/zip"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -101,14 +103,22 @@ func Test(prefix ...string) {
 		for _, prefix := range result.CommonPrefixes {
 			fmt.Println(prefix.Prefix)
 		}
+		return
 	} else {
 		for _, content := range result.Contents {
 			fileName := strings.Split(content.Key, "/")
 			// fmt.Println(content.Key)
 			// fmt.Println(fileName[len(fileName)-1])
-			downloadData(strings.Join(append([]string{"https://data.binance.vision"}, content.Key), "/"), fileName[len(fileName)-1])
+			err = downloadData(strings.Join(append([]string{"https://data.binance.vision"}, content.Key), "/"), fileName[len(fileName)-1])
+			if err != nil {
+				log.Fatal("content.Key: ", content.Key)
+				log.Fatalf("Failed to download file: %v", err)
+			} else {
+				fmt.Println("Download file success: ", fileName[len(fileName)-1])
+			}
 		}
 	}
+	unzipFile(strings.Join([]string{prefix[1], prefix[2]}, "/"))
 
 }
 
@@ -141,6 +151,62 @@ func downloadData(DLURL, fileName string) error {
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// 解壓縮檔案
+// 遍歷目錄下的檔案
+// 將目錄下.zip檔案解壓縮
+func unzipFile(dirpath string) error {
+	// 遍歷目錄下的檔案
+	files, err := os.ReadDir(dirpath)
+	if err != nil {
+		return err
+	}
+
+	// 將目錄下 .zip 檔案加入 unFileList
+	unFileList := make([]string, 0)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		if filepath.Ext(file.Name()) == ".zip" {
+			unFileList = append(unFileList, file.Name())
+		}
+	}
+
+	// 將 unFileList 中的 .zip 檔案解壓縮
+	for _, zipFile := range unFileList {
+		zipReader, err := zip.OpenReader(strings.Join([]string{dirpath, zipFile}, "/"))
+		if err != nil {
+			log.Fatal("Failed to open zip file: ", err)
+			return err
+		}
+		defer zipReader.Close()
+		for _, f := range zipReader.File {
+			fileName, err := zipReader.Open(f.Name)
+			if err != nil {
+				log.Fatal("Failed to open file: ", err)
+				return err
+			}
+			defer fileName.Close()
+
+			// 將檔案寫入新內容
+			outFile, err := os.Create(strings.Join([]string{dirpath, f.Name}, "/"))
+			if err != nil {
+				log.Fatal("Failed to create file: ", err)
+				return err
+			}
+			defer outFile.Close()
+			_, err = io.Copy(outFile, fileName)
+			if err != nil {
+				log.Fatal("Failed to copy file: ", err)
+				return err
+			} else {
+				fmt.Println("Unzip file success: ", f.Name)
+			}
+		}
 	}
 	return nil
 }
