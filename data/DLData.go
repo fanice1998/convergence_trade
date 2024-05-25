@@ -59,7 +59,7 @@ func (d *DLData) Request() ([]byte, error) {
 }
 
 // 請求 https://s3-ap-northeast-1.amazonaws.com/data.binance.vision 取得 xml
-func Test(prefix ...string) {
+func DownloadData(prefix ...string) {
 	// 如果 prefix 為空，則代表使用預設值 "data/futures/um/monthly/klines/ENSUSDT/1h"
 	if len(prefix) == 0 {
 		prefix = append(prefix, "data/futures/um/monthly/klines/ENSUSDT/1h")

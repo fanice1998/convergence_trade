@@ -1,9 +1,8 @@
 package main
 
-import (
-	"github.com/data"
-)
+import "github.com/chart"
 
 func main() {
-	data.Test("kline", "SUIUSDT", "1h")
+	// data.DownloadData("kline", "SUIUSDT", "1h")
+	chart.Chart()
 }
