@@ -6,5 +6,6 @@ import (
 
 func main() {
 	// data.DownloadData("kline", "SUIUSDT", "1h")
-	chart.Chart()
+	ch := chart.KlineExamples{}
+	ch.Chart()
 }

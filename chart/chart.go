@@ -1,6 +1,7 @@
 package chart
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -105,37 +106,6 @@ var kd = [...]klineData{
 	{date: "2018/6/13", data: [4]float32{2190.1, 2148.35, 2126.22, 2190.1}},
 }
 
-func klineBase() *charts.Kline {
-	kline := charts.NewKLine()
-
-	x := make([]string, 0)
-	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(kd); i++ {
-		x = append(x, kd[i].date)
-		y = append(y, opts.KlineData{Value: kd[i].data})
-	}
-
-	kline.SetGlobalOptions(
-		charts.WithTitleOpts(opts.Title{
-			Title: "Kline-example",
-		}),
-		charts.WithXAxisOpts(opts.XAxis{
-			SplitNumber: 20,
-		}),
-		charts.WithYAxisOpts(opts.YAxis{
-			Scale: opts.Bool(true),
-		}),
-		charts.WithDataZoomOpts(opts.DataZoom{
-			Start:      50,
-			End:        100,
-			XAxisIndex: []int{0},
-		}),
-	)
-
-	kline.SetXAxis(x).AddSeries("kline", y)
-	return kline
-}
-
 func klineDataZoomInside() *charts.Kline {
 	kline := charts.NewKLine()
 
@@ -154,83 +124,13 @@ func klineDataZoomInside() *charts.Kline {
 			SplitNumber: 20,
 		}),
 		charts.WithYAxisOpts(opts.YAxis{
-			Scale: opts.Bool(true),
+			Scale: true,
 		}),
 		charts.WithDataZoomOpts(opts.DataZoom{
 			Type:       "inside",
 			Start:      50,
 			End:        100,
 			XAxisIndex: []int{0},
-		}),
-	)
-
-	kline.SetXAxis(x).AddSeries("kline", y)
-	return kline
-}
-
-func klineDataZoomBoth() *charts.Kline {
-	kline := charts.NewKLine()
-
-	x := make([]string, 0)
-	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(kd); i++ {
-		x = append(x, kd[i].date)
-		y = append(y, opts.KlineData{Value: kd[i].data})
-	}
-
-	kline.SetGlobalOptions(
-		charts.WithTitleOpts(opts.Title{
-			Title: "DataZoom(inside&slider)",
-		}),
-		charts.WithXAxisOpts(opts.XAxis{
-			SplitNumber: 20,
-		}),
-		charts.WithYAxisOpts(opts.YAxis{
-			Scale: opts.Bool(true),
-		}),
-		charts.WithDataZoomOpts(opts.DataZoom{
-			Type:       "inside",
-			Start:      50,
-			End:        100,
-			XAxisIndex: []int{0},
-		}),
-		charts.WithDataZoomOpts(opts.DataZoom{
-			Type:       "slider",
-			Start:      50,
-			End:        100,
-			XAxisIndex: []int{0},
-		}),
-	)
-
-	kline.SetXAxis(x).AddSeries("kline", y)
-	return kline
-}
-
-func klineDataZoomYAxis() *charts.Kline {
-	kline := charts.NewKLine()
-
-	x := make([]string, 0)
-	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(kd); i++ {
-		x = append(x, kd[i].date)
-		y = append(y, opts.KlineData{Value: kd[i].data})
-	}
-
-	kline.SetGlobalOptions(
-		charts.WithTitleOpts(opts.Title{
-			Title: "DataZoom(yAxis)",
-		}),
-		charts.WithXAxisOpts(opts.XAxis{
-			SplitNumber: 20,
-		}),
-		charts.WithYAxisOpts(opts.YAxis{
-			Scale: opts.Bool(true),
-		}),
-		charts.WithDataZoomOpts(opts.DataZoom{
-			Type:       "slider",
-			Start:      50,
-			End:        100,
-			YAxisIndex: []int{0},
 		}),
 	)
 
@@ -256,7 +156,7 @@ func klineStyle() *charts.Kline {
 			SplitNumber: 20,
 		}),
 		charts.WithYAxisOpts(opts.YAxis{
-			Scale: opts.Bool(true),
+			Scale: true,
 		}),
 		charts.WithDataZoomOpts(opts.DataZoom{
 			Start:      50,
@@ -279,7 +179,7 @@ func klineStyle() *charts.Kline {
 			}),
 			charts.WithMarkPointStyleOpts(opts.MarkPointStyle{
 				Label: &opts.Label{
-					Show: opts.Bool(true),
+					Show: true,
 				},
 			}),
 			charts.WithItemStyleOpts(opts.ItemStyle{
@@ -297,14 +197,15 @@ type KlineExamples struct{}
 func (KlineExamples) Chart() {
 	page := components.NewPage()
 	page.AddCharts(
-		klineBase(),
 		klineDataZoomInside(),
-		klineDataZoomBoth(),
-		klineDataZoomYAxis(),
 		klineStyle(),
 	)
 
-	f, err := os.Create("examples/html/kline.html")
+	err := os.MkdirAll("./examples/html", 0777)
+	if err != nil {
+		fmt.Println(err)
+	}
+	f, err := os.Create("./examples/html/kline.html")
 	if err != nil {
 		panic(err)
 
