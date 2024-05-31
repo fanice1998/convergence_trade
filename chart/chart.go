@@ -55,6 +55,8 @@ var kd = func() []KlineData {
 			if d[0] == "open_time" {
 				continue
 			} else {
+				// source data [open, high, low, close]
+				// go-echarts kline data [open, close, low, high]
 				open, _ := strconv.ParseFloat(d[1], 32)
 				high, _ := strconv.ParseFloat(d[2], 32)
 				low, _ := strconv.ParseFloat(d[3], 32)
@@ -63,9 +65,9 @@ var kd = func() []KlineData {
 					Date: d[0],
 					Data: [4]float32{
 						float32(open),
-						float32(high),
-						float32(low),
 						float32(close),
+						float32(low),
+						float32(high),
 					},
 				})
 			}
@@ -83,6 +85,10 @@ func klineDataZoomInside() *charts.Kline {
 		x = append(x, kd[i].Date)
 		y = append(y, opts.KlineData{Value: kd[i].Data})
 	}
+	var startCount float32 = 0.0
+	var endCount float32 = 100.0
+	startCount = (float32(len(kd)) - endCount) * 100 / float32(len(kd))
+	fmt.Println(startCount, endCount)
 
 	kline.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
@@ -96,13 +102,21 @@ func klineDataZoomInside() *charts.Kline {
 		}),
 		charts.WithDataZoomOpts(opts.DataZoom{
 			Type:       "inside",
-			Start:      50,
-			End:        100,
+			Start:      float32(startCount),
+			End:        float32(endCount),
 			XAxisIndex: []int{0},
 		}),
 	)
 
-	kline.SetXAxis(x).AddSeries("kline", y)
+	kline.SetXAxis(x).AddSeries("kline", y).
+		SetSeriesOptions(
+			charts.WithItemStyleOpts(opts.ItemStyle{
+				Color:        "green",
+				Color0:       "red",
+				BorderColor:  "darkgreen",
+				BorderColor0: "darkred",
+			}),
+		)
 	return kline
 }
 
@@ -116,6 +130,12 @@ func klineStyle() *charts.Kline {
 		y = append(y, opts.KlineData{Value: kd[i].Data})
 	}
 
+	totalCount := len(kd)
+	startPercent := 0
+	if totalCount > 100 {
+		startPercent = ((totalCount - 100) * 100) / totalCount
+	}
+
 	kline.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
 			Title: "different style",
@@ -127,8 +147,8 @@ func klineStyle() *charts.Kline {
 			Scale: true,
 		}),
 		charts.WithDataZoomOpts(opts.DataZoom{
-			Start:      50,
-			End:        100,
+			Start:      float32(startPercent),
+			End:        float32(startPercent + 100),
 			XAxisIndex: []int{0},
 		}),
 	)
@@ -166,7 +186,7 @@ func (KlineExamples) Chart() {
 	page := components.NewPage()
 	page.AddCharts(
 		klineDataZoomInside(),
-		klineStyle(),
+		// klineStyle(),
 	)
 
 	err := os.MkdirAll("./examples/html", 0777)
