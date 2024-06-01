@@ -76,7 +76,7 @@ var kd = func() []KlineData {
 	return kd
 }()
 
-func klineDataZoomInside() *charts.Kline {
+func klineDataZoomInside(markLineOpts []charts.SeriesOpts) *charts.Kline {
 	kline := charts.NewKLine()
 
 	x := make([]string, 0)
@@ -108,14 +108,34 @@ func klineDataZoomInside() *charts.Kline {
 		}),
 	)
 
+	// 繪製樣式
+	// markLineOpts := make([]charts.SeriesOpts, 0)
+	markLineOpts = append(markLineOpts,
+		charts.WithItemStyleOpts(opts.ItemStyle{
+			Color:        "green",
+			Color0:       "red",
+			BorderColor:  "darkgreen",
+			BorderColor0: "darkred",
+		}),
+		charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
+			Name: "max",
+			Type: "max",
+		}), charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
+			Name: "min",
+			Type: "min",
+		}), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{
+			Name:  "test",
+			YAxis: 1500,
+		}), charts.WithMarkLineStyleOpts(opts.MarkLineStyle{
+			Label: &opts.Label{
+				Show: true,
+			},
+		}))
+
+	// 繪製 e-chart
 	kline.SetXAxis(x).AddSeries("kline", y).
 		SetSeriesOptions(
-			charts.WithItemStyleOpts(opts.ItemStyle{
-				Color:        "green",
-				Color0:       "red",
-				BorderColor:  "darkgreen",
-				BorderColor0: "darkred",
-			}),
+			markLineOpts...,
 		)
 	return kline
 }
@@ -186,7 +206,7 @@ func (KlineExamples) Chart() {
 	page := components.NewPage()
 	page.AddCharts(
 		klineDataZoomInside(),
-		// klineStyle(),
+		klineStyle(),
 	)
 
 	err := os.MkdirAll("./examples/html", 0777)
