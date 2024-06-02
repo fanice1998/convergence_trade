@@ -1,6 +1,7 @@
 package chart
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/chromedp/chromedp"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/components"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -18,20 +20,20 @@ type KlineData struct {
 	Data [4]float32
 }
 
-// var kd = func() []KlineData {
-// 	var kData []KlineData
+// var Kd = func() []KlineData {
+// 	var Kdata []KlineData
 // 	os.OpenFile("./Data/ETHUSDT/1h/")
 
 // }
 
-var kd = func() []KlineData {
-	dirPath := "./ETHUSDT/1h"
+var Kd = func() []KlineData {
+	dirPath := "./SUIUSDT/1h"
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		panic(err)
 	}
 
-	var kd []KlineData
+	var Kd []KlineData
 
 	// 迴圈讀取每個檔案
 	for _, file := range files {
@@ -61,7 +63,7 @@ var kd = func() []KlineData {
 				high, _ := strconv.ParseFloat(d[2], 32)
 				low, _ := strconv.ParseFloat(d[3], 32)
 				close, _ := strconv.ParseFloat(d[4], 32)
-				kd = append(kd, KlineData{
+				Kd = append(Kd, KlineData{
 					Date: d[0],
 					Data: [4]float32{
 						float32(open),
@@ -73,21 +75,21 @@ var kd = func() []KlineData {
 			}
 		}
 	}
-	return kd
+	return Kd
 }()
 
-func klineDataZoomInside(markLineOpts []charts.SeriesOpts) *charts.Kline {
+func klineDataZoomInside() *charts.Kline {
 	kline := charts.NewKLine()
 
 	x := make([]string, 0)
 	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(kd); i++ {
-		x = append(x, kd[i].Date)
-		y = append(y, opts.KlineData{Value: kd[i].Data})
+	for i := 0; i < len(Kd); i++ {
+		x = append(x, Kd[i].Date)
+		y = append(y, opts.KlineData{Value: Kd[i].Data})
 	}
 	var startCount float32 = 0.0
 	var endCount float32 = 100.0
-	startCount = (float32(len(kd)) - endCount) * 100 / float32(len(kd))
+	startCount = (float32(len(Kd)) - endCount) * 100 / float32(len(Kd))
 	fmt.Println(startCount, endCount)
 
 	kline.SetGlobalOptions(
@@ -110,6 +112,7 @@ func klineDataZoomInside(markLineOpts []charts.SeriesOpts) *charts.Kline {
 
 	// 繪製樣式
 	// markLineOpts := make([]charts.SeriesOpts, 0)
+	var markLineOpts []charts.SeriesOpts
 	markLineOpts = append(markLineOpts,
 		charts.WithItemStyleOpts(opts.ItemStyle{
 			Color:        "green",
@@ -130,7 +133,8 @@ func klineDataZoomInside(markLineOpts []charts.SeriesOpts) *charts.Kline {
 			Label: &opts.Label{
 				Show: true,
 			},
-		}))
+		}),
+	)
 
 	// 繪製 e-chart
 	kline.SetXAxis(x).AddSeries("kline", y).
@@ -145,12 +149,12 @@ func klineStyle() *charts.Kline {
 
 	x := make([]string, 0)
 	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(kd); i++ {
-		x = append(x, kd[i].Date)
-		y = append(y, opts.KlineData{Value: kd[i].Data})
+	for i := 0; i < len(Kd); i++ {
+		x = append(x, Kd[i].Date)
+		y = append(y, opts.KlineData{Value: Kd[i].Data})
 	}
 
-	totalCount := len(kd)
+	totalCount := len(Kd)
 	startPercent := 0
 	if totalCount > 100 {
 		startPercent = ((totalCount - 100) * 100) / totalCount
@@ -214,9 +218,41 @@ func (KlineExamples) Chart() {
 		fmt.Println(err)
 	}
 	f, err := os.Create("./examples/html/kline.html")
+	// f, err := os.Create("kline.html")
 	if err != nil {
 		panic(err)
 
 	}
+	defer f.Close()
 	page.Render(io.MultiWriter(f))
+
+	// 將 html 渲染後得結果儲存成圖片
+	pwd, _ := os.Getwd()
+	fileURL := "file://" + filepath.Join(pwd, "./examples/html/kline.html")
+	saveImage(fileURL)
+}
+
+// 透過 chromedp 將 html 渲染後得結果儲存成圖片
+func saveImage(fileURL string) {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	var buf []byte
+
+	err := chromedp.Run(ctx, fullScreenshot(fileURL, &buf))
+	if err != nil {
+		panic(err)
+	}
+
+	if err := os.WriteFile("./examples/html/kline.png", buf, 0644); err != nil {
+		panic(err)
+	}
+}
+
+func fullScreenshot(url string, res *[]byte) chromedp.Tasks {
+	return chromedp.Tasks{
+		chromedp.Navigate(url),
+		chromedp.WaitVisible(`body`, chromedp.ByQuery),
+		chromedp.FullScreenshot(res, 90),
+	}
 }
