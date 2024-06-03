@@ -2,11 +2,14 @@ module github.com
 
 go 1.22.3
 
-require github.com/go-echarts/go-echarts/v2 v2.3.3
+require (
+	github.com/chromedp/chromedp v0.9.5
+	github.com/go-echarts/go-echarts/v2 v2.3.3
+	github.com/markcheno/go-talib v0.0.0-20190307022042-cd53a9264d70
+)
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20240529195259-de715aab5f80 // indirect
-	github.com/chromedp/chromedp v0.9.5 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect

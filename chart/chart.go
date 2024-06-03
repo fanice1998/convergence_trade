@@ -20,12 +20,6 @@ type KlineData struct {
 	Data [4]float32
 }
 
-// var Kd = func() []KlineData {
-// 	var Kdata []KlineData
-// 	os.OpenFile("./Data/ETHUSDT/1h/")
-
-// }
-
 var Kd = func() []KlineData {
 	dirPath := "./SUIUSDT/1h"
 	files, err := os.ReadDir(dirPath)
@@ -87,10 +81,14 @@ func klineDataZoomInside() *charts.Kline {
 		x = append(x, Kd[i].Date)
 		y = append(y, opts.KlineData{Value: Kd[i].Data})
 	}
+
+	// 圖像比例
+	// 起點為startCount，終點為endCount
+	// 圖像比例 = (總數量 - 終點) * 100 / 總數量
+	// 因沒辦法指定索引，故只能用百分比方式當索引
 	var startCount float32 = 0.0
 	var endCount float32 = 100.0
 	startCount = (float32(len(Kd)) - endCount) * 100 / float32(len(Kd))
-	fmt.Println(startCount, endCount)
 
 	kline.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
@@ -112,8 +110,7 @@ func klineDataZoomInside() *charts.Kline {
 
 	// 繪製樣式
 	// markLineOpts := make([]charts.SeriesOpts, 0)
-	var markLineOpts []charts.SeriesOpts
-	markLineOpts = append(markLineOpts,
+	markLineOpts := []charts.SeriesOpts{
 		charts.WithItemStyleOpts(opts.ItemStyle{
 			Color:        "green",
 			Color0:       "red",
@@ -131,17 +128,45 @@ func klineDataZoomInside() *charts.Kline {
 			YAxis: 1500,
 		}), charts.WithMarkLineStyleOpts(opts.MarkLineStyle{
 			Label: &opts.Label{
-				Show: true,
+				Show: false,
 			},
 		}),
-	)
+	}
 
 	// 繪製 e-chart
 	kline.SetXAxis(x).AddSeries("kline", y).
 		SetSeriesOptions(
 			markLineOpts...,
 		)
+
+	// calculateSMA(20, y)
+	fmt.Println(calculateSMA(20, y))
+
 	return kline
+}
+
+func calculateSMA(days int, data []opts.KlineData) []float32 {
+	if days <= 0 || days >= len(data) {
+		return nil
+	}
+
+	fmt.Printf("data: %v", len(data))
+
+	sma := make([]float32, len(data))
+	for i := 0; i < len(data)-1; i++ {
+		sum := float32(0.0)
+		if days > i {
+			sma[i] = sum
+			continue
+		} else {
+			for j := i - days; j < i; j++ {
+				sum += data[j].Value.([4]float32)[3]
+			}
+		}
+		sma[i] = sum / float32(days)
+	}
+
+	return sma
 }
 
 func klineStyle() *charts.Kline {
