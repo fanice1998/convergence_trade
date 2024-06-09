@@ -2,84 +2,27 @@ package chart
 
 import (
 	"context"
-	"encoding/csv"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/chromedp/chromedp"
+	"github.com/common"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/components"
 	"github.com/go-echarts/go-echarts/v2/opts"
 )
 
-type KlineData struct {
-	Date string
-	Data [4]float32
-}
-
-var Kd = func() []KlineData {
-	dirPath := "./SUIUSDT/1h"
-	files, err := os.ReadDir(dirPath)
-	if err != nil {
-		panic(err)
-	}
-
-	var Kd []KlineData
-
-	// 迴圈讀取每個檔案
-	for _, file := range files {
-		// check file is csv
-		if filepath.Ext(file.Name()) != ".csv" {
-			continue
-		}
-		csvFile, err := os.Open(filepath.Join(dirPath, file.Name()))
-		if err != nil {
-			panic(err)
-		}
-		defer csvFile.Close()
-
-		csvReader := csv.NewReader(csvFile)
-		records, err := csvReader.ReadAll()
-		if err != nil {
-			panic(err)
-		}
-
-		for _, d := range records {
-			if d[0] == "open_time" {
-				continue
-			} else {
-				// source data [open, high, low, close]
-				// go-echarts kline data [open, close, low, high]
-				open, _ := strconv.ParseFloat(d[1], 32)
-				high, _ := strconv.ParseFloat(d[2], 32)
-				low, _ := strconv.ParseFloat(d[3], 32)
-				close, _ := strconv.ParseFloat(d[4], 32)
-				Kd = append(Kd, KlineData{
-					Date: d[0],
-					Data: [4]float32{
-						float32(open),
-						float32(close),
-						float32(low),
-						float32(high),
-					},
-				})
-			}
-		}
-	}
-	return Kd
-}()
-
-func klineDataZoomInside() *charts.Kline {
+// 可內部捲動的圖表
+func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 	kline := charts.NewKLine()
 
 	x := make([]string, 0)
 	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(Kd); i++ {
-		x = append(x, Kd[i].Date)
-		y = append(y, opts.KlineData{Value: Kd[i].Data})
+	for i := 0; i < len(kd); i++ {
+		x = append(x, kd[i].Date)
+		y = append(y, opts.KlineData{Value: kd[i].Data})
 	}
 
 	// 圖像比例
@@ -88,7 +31,7 @@ func klineDataZoomInside() *charts.Kline {
 	// 因沒辦法指定索引，故只能用百分比方式當索引
 	var startCount float32 = 0.0
 	var endCount float32 = 100.0
-	startCount = (float32(len(Kd)) - endCount) * 100 / float32(len(Kd))
+	startCount = (float32(len(kd)) - endCount) * 100 / float32(len(kd))
 
 	kline.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
@@ -145,41 +88,41 @@ func klineDataZoomInside() *charts.Kline {
 	return kline
 }
 
-func calculateSMA(days int, data []opts.KlineData) []float32 {
+func calculateSMA(days int, data []opts.KlineData) []float64 {
 	if days <= 0 || days >= len(data) {
 		return nil
 	}
 
 	fmt.Printf("data: %v", len(data))
 
-	sma := make([]float32, len(data))
+	sma := make([]float64, len(data))
 	for i := 0; i < len(data)-1; i++ {
-		sum := float32(0.0)
+		sum := float64(0.0)
 		if days > i {
 			sma[i] = sum
 			continue
 		} else {
 			for j := i - days; j < i; j++ {
-				sum += data[j].Value.([4]float32)[3]
+				sum += data[j].Value.([4]float64)[3]
 			}
 		}
-		sma[i] = sum / float32(days)
+		sma[i] = sum / float64(days)
 	}
 
 	return sma
 }
 
-func klineStyle() *charts.Kline {
+func klineStyle(kd []common.KlineData) *charts.Kline {
 	kline := charts.NewKLine()
 
 	x := make([]string, 0)
 	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(Kd); i++ {
-		x = append(x, Kd[i].Date)
-		y = append(y, opts.KlineData{Value: Kd[i].Data})
+	for i := 0; i < len(kd); i++ {
+		x = append(x, kd[i].Date)
+		y = append(y, opts.KlineData{Value: kd[i].Data})
 	}
 
-	totalCount := len(Kd)
+	totalCount := len(kd)
 	startPercent := 0
 	if totalCount > 100 {
 		startPercent = ((totalCount - 100) * 100) / totalCount
@@ -231,11 +174,11 @@ func klineStyle() *charts.Kline {
 
 type KlineExamples struct{}
 
-func (KlineExamples) Chart() {
+func (KlineExamples) Chart(kd []common.KlineData) {
 	page := components.NewPage()
 	page.AddCharts(
-		klineDataZoomInside(),
-		klineStyle(),
+		klineDataZoomInside(kd),
+		klineStyle(kd),
 	)
 
 	err := os.MkdirAll("./examples/html", 0777)
