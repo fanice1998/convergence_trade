@@ -16,9 +16,7 @@ type KlineData struct {
 
 func TestMain(m *testing.T) {
 	trader := strategy.Strategy{}
-	trader.Signal = append(trader.Signal, strategy.Signal{
-		
-	})
+	trader.Signal = append(trader.Signal, strategy.Signal{})
 
 	// trader.Signal.EMA.Status = true
 

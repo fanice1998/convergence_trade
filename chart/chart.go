@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/chromedp/chromedp"
 	"github.com/common"
@@ -29,9 +30,9 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 	// 起點為startCount，終點為endCount
 	// 圖像比例 = (總數量 - 終點) * 100 / 總數量
 	// 因沒辦法指定索引，故只能用百分比方式當索引
-	var startCount float32 = 0.0
-	var endCount float32 = 100.0
-	startCount = (float32(len(kd)) - endCount) * 100 / float32(len(kd))
+	// var startCount float32 = 0.0
+	// var endCount float32 = 100.0
+	// startCount = (float32(len(kd)) - endCount) * 100 / float32(len(kd))
 
 	kline.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
@@ -44,9 +45,11 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 			Scale: true,
 		}),
 		charts.WithDataZoomOpts(opts.DataZoom{
-			Type:       "inside",
-			Start:      float32(startCount),
-			End:        float32(endCount),
+			Type: "inside",
+			// Start:      float32(startCount),
+			// End:        float32(endCount),
+			Start:      0,
+			End:        100,
 			XAxisIndex: []int{0},
 		}),
 	)
@@ -60,21 +63,35 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 			BorderColor:  "darkgreen",
 			BorderColor0: "darkred",
 		}),
-		charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
-			Name: "max",
-			Type: "max",
-		}), charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
-			Name: "min",
-			Type: "min",
-		}), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{
-			Name:  "test",
-			YAxis: 1500,
-		}), charts.WithMarkLineStyleOpts(opts.MarkLineStyle{
-			Label: &opts.Label{
-				Show: false,
-			},
+		// charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
+		// 	Name: "max",
+		// 	Type: "max",
+		// }), charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
+		// 	Name: "min",
+		// 	Type: "min",
+		// }), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{
+		// 	Name:  "test",
+		// 	YAxis: 1500,
+		// }),
+		charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{
+			Name:     "SMA",
+			YAxis:    1500,
+			ValueDim: "highest",
 		}),
+		//  之後應該可以用來做收斂圖形
+		charts.WithMarkLineNameCoordItemOpts(opts.MarkLineNameCoordItem{
+			Name:        "test",
+			Coordinate0: []interface{}{"1577836800000", float64(300)},
+			Coordinate1: []interface{}{"1580511600000", float64(2000)},
+		}),
+		// charts.WithMarkLineStyleOpts(opts.MarkLineStyle{
+		// 	Label: &opts.Label{
+		// 		Show: true,
+		// 	},
+		// }),
 	}
+	fmt.Println("calculateSMA length: ", len(calculateSMA(4, y)))
+	fmt.Println("KlineData length: ", len(y))
 
 	// 繪製 e-chart
 	kline.SetXAxis(x).AddSeries("kline", y).
@@ -83,27 +100,28 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 		)
 
 	// calculateSMA(20, y)
-	fmt.Println(calculateSMA(20, y))
+	// fmt.Println(calculateSMA(20, y))
 
 	return kline
 }
 
+// 計算 SMA Y軸資料
 func calculateSMA(days int, data []opts.KlineData) []float64 {
 	if days <= 0 || days >= len(data) {
 		return nil
 	}
 
-	fmt.Printf("data: %v", len(data))
-
 	sma := make([]float64, len(data))
 	for i := 0; i < len(data)-1; i++ {
-		sum := float64(0.0)
+		// sum := float64(0.0)
+		sum := 0.0
 		if days > i {
-			sma[i] = sum
+			sma[i] = 1300.0
 			continue
 		} else {
 			for j := i - days; j < i; j++ {
-				sum += data[j].Value.([4]float64)[3]
+				t, _ := strconv.ParseFloat(fmt.Sprintf("%.3f", data[j].Value.([4]float64)[3]), 64)
+				sum += t
 			}
 		}
 		sma[i] = sum / float64(days)
@@ -112,6 +130,7 @@ func calculateSMA(days int, data []opts.KlineData) []float64 {
 	return sma
 }
 
+// 測試圖表樣式
 func klineStyle(kd []common.KlineData) *charts.Kline {
 	kline := charts.NewKLine()
 
@@ -139,8 +158,10 @@ func klineStyle(kd []common.KlineData) *charts.Kline {
 			Scale: true,
 		}),
 		charts.WithDataZoomOpts(opts.DataZoom{
-			Start:      float32(startPercent),
-			End:        float32(startPercent + 100),
+			Start: float32(startPercent),
+			End:   float32(startPercent + 100),
+			// Start:      0,
+			// End:        100,
 			XAxisIndex: []int{0},
 		}),
 	)
@@ -217,6 +238,7 @@ func saveImage(fileURL string) {
 	}
 }
 
+// 取得完整畫面圖片
 func fullScreenshot(url string, res *[]byte) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Navigate(url),

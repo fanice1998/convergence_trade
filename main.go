@@ -9,7 +9,6 @@ import (
 
 	"github.com/chart"
 	"github.com/common"
-	"github.com/data"
 )
 
 func readData(path string) (kd []common.KlineData) {
@@ -38,7 +37,7 @@ func readData(path string) (kd []common.KlineData) {
 			panic(err)
 		}
 
-		for i, d := range records {
+		for _, d := range records {
 			if d[0] == "open_time" {
 				continue
 			} else {
@@ -49,7 +48,7 @@ func readData(path string) (kd []common.KlineData) {
 				low, _ := strconv.ParseFloat(d[3], 64)
 				close, _ := strconv.ParseFloat(d[4], 64)
 				kd = append(kd, common.KlineData{
-					Date: strconv.Itoa(i),
+					Date: d[0],
 					Data: [4]float64{
 						open,
 						close,
@@ -65,7 +64,7 @@ func readData(path string) (kd []common.KlineData) {
 
 // 執行程式
 func main() {
-	data.DownloadData("kline", "ETHUSDT", "1h")
+	// data.DownloadData("kline", "ETHUSDT", "1h")
 
 	var kd = readData("./ETHUSDT/1h")
 
