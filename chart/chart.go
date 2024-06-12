@@ -56,7 +56,7 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 
 	// 繪製樣式
 	// markLineOpts := make([]charts.SeriesOpts, 0)
-	markLineOpts := []charts.SeriesOpts{
+	markKLineOpts := []charts.SeriesOpts{
 		charts.WithItemStyleOpts(opts.ItemStyle{
 			Color:        "green",
 			Color0:       "red",
@@ -96,12 +96,23 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 	// 繪製 e-chart
 	kline.SetXAxis(x).AddSeries("kline", y).
 		SetSeriesOptions(
-			markLineOpts...,
+			markKLineOpts...,
 		)
 
 	// calculateSMA(20, y)
 	// fmt.Println(calculateSMA(20, y))
 
+	line := charts.NewLine()
+	lx := make([]string, 0)
+	ly := make([]opts.LineData, 0)
+	sma := calculateSMA(30, y)
+	for i := 0; i < len(kd); i++ {
+		lx = append(lx, kd[i].Date)
+		ly = append(ly, opts.LineData{Value: sma[i]})
+	}
+	line.SetXAxis(lx).AddSeries("line", ly)
+
+	kline.Overlap(line)
 	return kline
 }
 
@@ -213,6 +224,7 @@ func (KlineExamples) Chart(kd []common.KlineData) {
 
 	}
 	defer f.Close()
+
 	page.Render(io.MultiWriter(f))
 
 	// 將 html 渲染後得結果儲存成圖片
