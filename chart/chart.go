@@ -14,124 +14,27 @@ import (
 	"github.com/html2img"
 )
 
-// 可內部捲動的圖表
-func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
-	kline := charts.NewKLine()
-
-	x := make([]string, 0)
-	y := make([]opts.KlineData, 0)
-	for i := 0; i < len(kd); i++ {
-		x = append(x, kd[i].Date)
-		y = append(y, opts.KlineData{Value: kd[i].Data})
-	}
-
-	// 圖像比例
-	// 起點為startCount，終點為endCount
-	// 圖像比例 = (總數量 - 終點) * 100 / 總數量
-	// 因沒辦法指定索引，故只能用百分比方式當索引
-	// var startCount float32 = 0.0
-	// var endCount float32 = 100.0
-	// startCount = (float32(len(kd)) - endCount) * 100 / float32(len(kd))
-
-	kline.SetGlobalOptions(
-		charts.WithTitleOpts(opts.Title{
-			Title: "DataZoom(inside)",
-		}),
-		charts.WithXAxisOpts(opts.XAxis{
-			SplitNumber: 20,
-		}),
-		charts.WithYAxisOpts(opts.YAxis{
-			Scale: true,
-		}),
-		charts.WithDataZoomOpts(opts.DataZoom{
-			Type: "inside",
-			// Start:      float32(startCount),
-			// End:        float32(endCount),
-			Start:      0,
-			End:        100,
-			XAxisIndex: []int{0},
-		}),
-	)
-
-	// 繪製樣式
-	// markLineOpts := make([]charts.SeriesOpts, 0)
-	markKLineOpts := []charts.SeriesOpts{
-		charts.WithItemStyleOpts(opts.ItemStyle{
-			Color:        "green",
-			Color0:       "red",
-			BorderColor:  "darkgreen",
-			BorderColor0: "darkred",
-		}),
-		// charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
-		// 	Name: "max",
-		// 	Type: "max",
-		// }), charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
-		// 	Name: "min",
-		// 	Type: "min",
-		// }), charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{
-		// 	Name:  "test",
-		// 	YAxis: 1500,
-		// }),
-		charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{
-			Name:     "SMA",
-			YAxis:    1500,
-			ValueDim: "highest",
-		}),
-		//  之後應該可以用來做收斂圖形
-		charts.WithMarkLineNameCoordItemOpts(opts.MarkLineNameCoordItem{
-			Name:        "test",
-			Coordinate0: []interface{}{"1577836800000", float64(300)},
-			Coordinate1: []interface{}{"1580511600000", float64(2000)},
-		}),
-		// charts.WithMarkLineStyleOpts(opts.MarkLineStyle{
-		// 	Label: &opts.Label{
-		// 		Show: true,
-		// 	},
-		// }),
-	}
-	fmt.Println("calculateSMA length: ", len(calculateSMA(4, y)))
-	fmt.Println("KlineData length: ", len(y))
-
-	// 繪製 e-chart
-	kline.SetXAxis(x).AddSeries("kline", y).
-		SetSeriesOptions(
-			markKLineOpts...,
-		)
-
-	// calculateSMA(20, y)
-	// fmt.Println(calculateSMA(20, y))
-
-	line := charts.NewLine()
-	lx := make([]string, 0)
-	ly := make([]opts.LineData, 0)
-	sma := calculateSMA(30, y)
-	fmt.Println("SMA ", sma[30])
-	for i := 0; i < len(kd); i++ {
-		lx = append(lx, kd[i].Date)
-		ly = append(ly, opts.LineData{Value: sma[i]})
-	}
-	line.SetXAxis(lx).AddSeries("line", ly)
-
-	kline.Overlap(line)
-	return kline
-}
-
 // 計算 SMA Y軸資料
-func calculateSMA(days int, data []opts.KlineData) []float64 {
+func calculateSMA(days int, data []common.KlineData) []interface{} {
 	if days <= 0 || days > len(data) {
 		return nil
 	}
 
-	sma := make([]float64, len(data))
+	// 宣告一個新的陣列，長度為資料的長度
+	sma := make([]interface{}, len(data))
+
 	for i := 0; i < len(data); i++ {
-		// sum := float64(0.0)
-		sum := 0.0
+
+		var sum float64
+
+		// 計算 SMA當前值
+		// 若小於指定天數，則不計算
 		if days > i {
-			sma[i] = 0.0
+			sma[i] = nil
 			continue
 		} else {
 			for j := i - days; j < i; j++ {
-				t, _ := strconv.ParseFloat(fmt.Sprintf("%.3f", data[j].Value.([4]float64)[3]), 64)
+				t, _ := strconv.ParseFloat(fmt.Sprintf("%.3f", data[j].Data[3]), 64)
 				sum += t
 			}
 		}
@@ -204,12 +107,150 @@ func klineStyle(kd []common.KlineData) *charts.Kline {
 	return kline
 }
 
+type KlineDataChart struct {
+	Name          string
+	KlineData     []common.KlineData
+	SMA           []int `json:"omitempty"`
+	markKLineOpts []charts.SeriesOpts
+	xAxis         []string
+	yAxis         []opts.KlineData
+}
+
+// 初始化圖表名稱
+func (k *KlineDataChart) SetName(name string) {
+	k.Name = name
+}
+
+// 初始化設定 Data
+func (k *KlineDataChart) SetData(kd []common.KlineData) {
+	if len(kd) > 0 {
+		k.KlineData = kd
+	} else {
+		panic("KlineData is empty")
+	}
+}
+
+// 初始化設定 sma
+func (k *KlineDataChart) SetSMA(sma []int) {
+	for _, v := range sma {
+		if v <= 0 {
+			panic("SMA is less than 0")
+		}
+	}
+	k.SMA = sma
+}
+
+// smaChart 建立 SMA 圖表
+func (k *KlineDataChart) smaChart(days int) *charts.Line {
+	line := charts.NewLine()
+	x := k.xAxis
+	y := make([]opts.LineData, len(k.KlineData))
+
+	sma := calculateSMA(days, k.KlineData)
+
+	for i := 0; i < len(k.KlineData); i++ {
+		y[i] = opts.LineData{Value: sma[i]}
+	}
+
+	line.SetXAxis(x).AddSeries(fmt.Sprintf("SMA_%d", days), y)
+
+	return line
+}
+
+// 主要視圖
+func (k *KlineDataChart) mainChart() *charts.Kline {
+	kline := charts.NewKLine()
+
+	// 視圖比例
+	// 是以百分比定位而不是以索引為定位
+	// endPercent := len(k.KlineData)
+	// startPercent := 0
+	var startPercent, endPercent float32
+	endPercent = float32(len(k.KlineData))
+	if endPercent > 100 {
+		startPercent = ((endPercent - 100) * 100) / endPercent
+	}
+
+	// kline 圖表設定選項
+	kline.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title: k.Name,
+		}),
+		charts.WithXAxisOpts(opts.XAxis{
+			SplitNumber: 20,
+		}),
+		charts.WithYAxisOpts(opts.YAxis{
+			Scale: true,
+		}),
+		charts.WithDataZoomOpts(opts.DataZoom{
+			Type:       "inside",
+			Start:      startPercent,
+			End:        endPercent,
+			XAxisIndex: []int{0},
+		}),
+	)
+
+	return kline
+}
+
+
+func (k *KlineDataChart) Chart() *charts.Kline {
+
+	// 建立 X, Y 軸資料
+	k.xAxis = make([]string, 0)
+	k.yAxis = make([]opts.KlineData, 0)
+	for i := 0; i < len(k.KlineData); i++ {
+		k.xAxis = append(k.xAxis, k.KlineData[i].Date)
+		k.yAxis = append(k.yAxis, opts.KlineData{Value: k.KlineData[i].Data})
+	}
+
+	// 預設的 markLineOpts
+	// 這裡的 markLineOpts 會覆蓋掉 SetSeriesOptions 的設定
+	k.markKLineOpts = []charts.SeriesOpts{
+		charts.WithItemStyleOpts(opts.ItemStyle{
+			Color:        "green",
+			Color0:       "red",
+			BorderColor:  "darkgreen",
+			BorderColor0: "darkred",
+		}),
+		//  之後應該可以用來做收斂圖形
+		charts.WithMarkLineNameCoordItemOpts(opts.MarkLineNameCoordItem{
+			Name:        "test",
+			Coordinate0: []interface{}{"1577836800000", float64(130)},
+			Coordinate1: []interface{}{"1580511600000", float64(220)},
+		}),
+	}
+
+	// 建立主圖表物件
+	main := k.mainChart()
+
+	// 繪製 e-chart
+	main.SetXAxis(k.xAxis).AddSeries(k.Name, k.yAxis).
+		SetSeriesOptions(
+			k.markKLineOpts...,
+		)
+
+	if len(k.SMA) != 0 {
+		for _, v := range k.SMA {
+			main.Overlap(k.smaChart(v))
+		}
+	}
+
+	return main
+}
+
 type KlineExamples struct{}
 
 func (KlineExamples) Chart(kd []common.KlineData) {
+	kline := KlineDataChart{}
+	kline.SetName("ETHUSDT")
+	kline.SetData(kd)
+	kline.SetSMA([]int{7, 30, 90})
+
 	page := components.NewPage()
 	page.AddCharts(
-		klineDataZoomInside(kd),
+		// klineDataZoomInside(kd),
+		kline.Chart(),
 		klineStyle(kd),
 	)
 
