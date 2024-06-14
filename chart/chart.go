@@ -106,6 +106,7 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 	lx := make([]string, 0)
 	ly := make([]opts.LineData, 0)
 	sma := calculateSMA(30, y)
+	fmt.Println("SMA ", sma[30])
 	for i := 0; i < len(kd); i++ {
 		lx = append(lx, kd[i].Date)
 		ly = append(ly, opts.LineData{Value: sma[i]})
@@ -118,16 +119,16 @@ func klineDataZoomInside(kd []common.KlineData) *charts.Kline {
 
 // 計算 SMA Y軸資料
 func calculateSMA(days int, data []opts.KlineData) []float64 {
-	if days <= 0 || days >= len(data) {
+	if days <= 0 || days > len(data) {
 		return nil
 	}
 
 	sma := make([]float64, len(data))
-	for i := 0; i < len(data)-1; i++ {
+	for i := 0; i < len(data); i++ {
 		// sum := float64(0.0)
 		sum := 0.0
 		if days > i {
-			sma[i] = 1300.0
+			sma[i] = 0.0
 			continue
 		} else {
 			for j := i - days; j < i; j++ {
