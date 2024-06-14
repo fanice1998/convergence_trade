@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/chromedp/chromedp v0.9.5
 	github.com/go-echarts/go-echarts/v2 v2.3.3
-	github.com/markcheno/go-talib v0.0.0-20190307022042-cd53a9264d70
+	github.com/muesli/clusters v0.0.0-20200529215643-2700303c1762
 )
 
 require (

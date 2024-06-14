@@ -140,6 +140,16 @@ func (k *KlineDataChart) SetSMA(sma []int) {
 	k.SMA = sma
 }
 
+func (k *KlineDataChart) markLineChart(yline float64) {
+	k.markKLineOpts = append(
+		k.markKLineOpts,
+		charts.WithMarkLineNameYAxisItemOpts(opts.MarkLineNameYAxisItem{
+			Name:  "markLine",
+			YAxis: yline,
+		}),
+	)
+}
+
 // smaChart 建立 SMA 圖表
 func (k *KlineDataChart) smaChart(days int) *charts.Line {
 	line := charts.NewLine()
@@ -193,7 +203,6 @@ func (k *KlineDataChart) mainChart() *charts.Kline {
 	return kline
 }
 
-
 func (k *KlineDataChart) Chart() *charts.Kline {
 
 	// 建立 X, Y 軸資料
@@ -224,12 +233,28 @@ func (k *KlineDataChart) Chart() *charts.Kline {
 	// 建立主圖表物件
 	main := k.mainChart()
 
+	// 設定 markLineOpts
+	SuportResistanceLines := TestSuportResistanceLine(
+		func(d []common.KlineData) (closes []float64) {
+			for _, v := range d {
+				closes = append(closes, v.Data[1])
+			}
+			return closes
+		}(k.KlineData),
+	)
+	if len(SuportResistanceLines) > 0 {
+		for _, v := range SuportResistanceLines {
+			k.markLineChart(v)
+		}
+	}
+
 	// 繪製 e-chart
 	main.SetXAxis(k.xAxis).AddSeries(k.Name, k.yAxis).
 		SetSeriesOptions(
 			k.markKLineOpts...,
 		)
 
+	// 插入 SMA 圖表
 	if len(k.SMA) != 0 {
 		for _, v := range k.SMA {
 			main.Overlap(k.smaChart(v))
