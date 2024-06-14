@@ -38,6 +38,9 @@ func readData(path string) (kd []common.KlineData) {
 		}
 
 		for _, d := range records {
+			if len(kd) == 1000 {
+				break
+			}
 			if d[0] == "open_time" {
 				continue
 			} else {
