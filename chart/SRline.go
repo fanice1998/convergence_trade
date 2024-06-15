@@ -1,12 +1,12 @@
 package chart
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/muesli/clusters"
 )
 
+// findExtrema finds the local maxima and minima in the price series.
 func findExtrema(prices []float64) ([]int, []int) {
 	var maxima, minima []int
 
@@ -22,10 +22,13 @@ func findExtrema(prices []float64) ([]int, []int) {
 	return maxima, minima
 }
 
+// point represents a price point in the time series.
 type point struct {
 	index int
 	price float64
 }
+
+// Points implements vptree.Interface.
 type Points []point
 
 func (p Points) Dims() int { return 1 }
@@ -42,6 +45,7 @@ func (p point) Coordinates() clusters.Coordinates {
 	return clusters.Coordinates{p.price}
 }
 
+// DBSCAN implementation using gonum.
 func DBSCAN(data Points, epsilon float64, minPoints int) [][]point {
 	var clusters [][]point
 	visited := make([]bool, len(data))
@@ -86,12 +90,15 @@ func regionQuery(data Points, i int, eps float64) (averages []int) {
 }
 
 func TestSuportResistanceLine(prices []float64) (averages []float64) {
+	// 測試用力資料
 	// prices := []float64{100, 102, 101, 104, 103, 99, 98, 97, 100, 105, 104, 106, 107, 106}
 
+	// Find the extrema points
 	maxima, minima := findExtrema(prices)
-	fmt.Println("Maxima indices: ", maxima)
-	fmt.Println("Minima indices: ", minima)
+	// fmt.Println("Maxima indices: ", maxima)
+	// fmt.Println("Minima indices: ", minima)
 
+	// Collect extrema points
 	var extremaPoints Points
 	for _, i := range maxima {
 		extremaPoints = append(extremaPoints, point{i, prices[i]})
@@ -101,10 +108,12 @@ func TestSuportResistanceLine(prices []float64) (averages []float64) {
 		extremaPoints = append(extremaPoints, point{i, prices[i]})
 	}
 
-	epsilon := 2.0
-	minPoints := 2
+	// Cluster the extrema points using DBSCAN
+	epsilon := 3.0
+	minPoints := 4
 	clusters := DBSCAN(extremaPoints, epsilon, minPoints)
 
+	// Determine support and resistance levels from clusters
 	for _, cluster := range clusters {
 		if len(cluster) > 0 {
 			sum := 0.0
@@ -113,7 +122,7 @@ func TestSuportResistanceLine(prices []float64) (averages []float64) {
 			}
 
 			average := sum / float64(len(cluster))
-			fmt.Printf("Support/Resistance level: %.2f\n", average)
+			// fmt.Printf("Support/Resistance level: %.2f\n", average)
 			averages = append(averages, average)
 		}
 	}

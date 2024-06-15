@@ -74,12 +74,5 @@ func main() {
 	ch := chart.KlineExamples{}
 	ch.Chart(kd)
 
-	// closes := func (kdd []common.KlineData) (d []float64) {
-	// 	for _, v := range kdd {
-	// 		d = append(d, v.Data[1])
-	// 	}
-	// 	return d
-	// }(kd)
-	// chart.TestSuportResistanceLine(closes)
-
+	// zigzag.TestGOGO(kd)
 }

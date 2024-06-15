@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/chart/zigzag"
 	"github.com/common"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/components"
@@ -140,6 +141,7 @@ func (k *KlineDataChart) SetSMA(sma []int) {
 	k.SMA = sma
 }
 
+// 設定圖表標記水平線
 func (k *KlineDataChart) markLineChart(yline float64) {
 	k.markKLineOpts = append(
 		k.markKLineOpts,
@@ -148,6 +150,18 @@ func (k *KlineDataChart) markLineChart(yline float64) {
 			YAxis: yline,
 		}),
 	)
+}
+
+// markLine to convergence 圖表標記線
+func (k *KlineDataChart) markLine(i []interface{}) {
+	k.markKLineOpts = append(k.markKLineOpts, charts.WithMarkLineNameCoordItemOpts(
+		opts.MarkLineNameCoordItem{
+			// Name:        "test",
+			Coordinate0: []interface{}{i[0], i[1]},
+			Coordinate1: []interface{}{i[2], i[3]},
+		},
+	))
+
 }
 
 // smaChart 建立 SMA 圖表
@@ -203,6 +217,7 @@ func (k *KlineDataChart) mainChart() *charts.Kline {
 	return kline
 }
 
+// 圖表運行主函數
 func (k *KlineDataChart) Chart() *charts.Kline {
 
 	// 建立 X, Y 軸資料
@@ -247,6 +262,20 @@ func (k *KlineDataChart) Chart() *charts.Kline {
 			k.markLineChart(v)
 		}
 	}
+	// --------------
+	ZigzagLines := zigzag.TestZigzagLine(k.KlineData)
+	for i := 0; i < len(ZigzagLines)-1; i++ {
+		k.markLine([]interface{}{k.xAxis[ZigzagLines[i].Index], ZigzagLines[i].Price, k.xAxis[ZigzagLines[i+1].Index], ZigzagLines[i+1].Price})
+	}
+
+	// 設定 convergenceLine
+	// ConvergenceLines := convergence.TestConvergenceLine(k.KlineData)
+	// if len(ConvergenceLines) > 0 {
+	// 	for _, v := range ConvergenceLines {
+	// 		k.markLine([]int{v, v+50}, "high")
+	// 		k.markLine([]int{v, v+50}, "low")
+	// 	}
+	// }
 
 	// 繪製 e-chart
 	main.SetXAxis(k.xAxis).AddSeries(k.Name, k.yAxis).
