@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/chart/zigzag"
 	"github.com/common"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/components"
@@ -262,20 +261,6 @@ func (k *KlineDataChart) Chart() *charts.Kline {
 			k.markLineChart(v)
 		}
 	}
-	// --------------
-	ZigzagLines := zigzag.TestZigzagLine(k.KlineData)
-	for i := 0; i < len(ZigzagLines)-1; i++ {
-		k.markLine([]interface{}{k.xAxis[ZigzagLines[i].Index], ZigzagLines[i].Price, k.xAxis[ZigzagLines[i+1].Index], ZigzagLines[i+1].Price})
-	}
-
-	// 設定 convergenceLine
-	// ConvergenceLines := convergence.TestConvergenceLine(k.KlineData)
-	// if len(ConvergenceLines) > 0 {
-	// 	for _, v := range ConvergenceLines {
-	// 		k.markLine([]int{v, v+50}, "high")
-	// 		k.markLine([]int{v, v+50}, "low")
-	// 	}
-	// }
 
 	// 繪製 e-chart
 	main.SetXAxis(k.xAxis).AddSeries(k.Name, k.yAxis).

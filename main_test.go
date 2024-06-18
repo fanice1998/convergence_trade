@@ -1,24 +1,49 @@
 package main
 
 import (
+	"os"
 	"testing"
 
-	// 导入其他必要的包，例如用于读取数据的包
-
-	"github.com/strategy"
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/components"
+	"github.com/go-echarts/go-echarts/v2/opts"
 )
 
-// 使用您提供的KlineData结构体
-type KlineData struct {
-	Date string
-	Data [4]float32 // 假设数组顺序为开盘价，收盘价，最低价，最高价
-}
+func Test_main(t *testing.T) {
+	// 创建一个新的K线图
+	kline := charts.NewKLine()
+	kline.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "蜡烛图和折线图重叠"}),
+		charts.WithXAxisOpts(opts.XAxis{Name: "X"}),
+		charts.WithYAxisOpts(opts.YAxis{Name: "Y"}),
+	)
 
-func TestMain(m *testing.T) {
-	trader := strategy.Strategy{}
-	trader.Signal = append(trader.Signal, strategy.Signal{})
+	// 添加K线图数据
+	kline.AddSeries("KLine", []opts.KlineData{
+		{Value: []float64{20, 30, 10, 35}},
+		{Value: []float64{40, 35, 30, 55}},
+		{Value: []float64{33, 38, 33, 40}},
+	})
 
-	// trader.Signal.EMA.Status = true
+	// 创建一个新的折线图
+	line := charts.NewLine()
+	lineData := []opts.LineData{
+		{Value: 30},
+		{Value: nil}, // 假设这里的数据被清洗掉了，使用nil表示
+		{Value: 20},
+	}
+	line.AddSeries("Line", lineData).SetSeriesOptions(
+		charts.WithLineChartOpts(opts.LineChart{Smooth: true}),
+	)
 
-	trader.Run()
+	// 将折线图和K线图重叠
+	kline.Overlap(line)
+
+	// 创建页面
+	page := components.NewPage()
+	page.AddCharts(kline)
+
+	// 将图表渲染成HTML文件
+	f, _ := os.Create("kline_line_overlap_with_nil.html")
+	page.Render(f)
 }
