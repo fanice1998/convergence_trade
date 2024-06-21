@@ -175,7 +175,7 @@ func (k *KlineDataChart) smaChart(days int) *charts.Line {
 		y[i] = opts.LineData{Value: sma[i]}
 	}
 
-	line.SetXAxis(x).AddSeries(fmt.Sprintf("SMA_%d", days), y)
+	line.SetXAxis(x).AddSeries(fmt.Sprintf("SMA_%d", days), y, charts.WithSeriesAnimation(false))
 
 	return line
 }
@@ -290,7 +290,7 @@ func (KlineExamples) Chart(kd []common.KlineData) {
 	page.AddCharts(
 		// klineDataZoomInside(kd),
 		kline.Chart(),
-		klineStyle(kd),
+		// klineStyle(kd),
 	)
 
 	err := os.MkdirAll("./examples/html", 0777)

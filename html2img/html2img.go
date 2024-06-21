@@ -28,7 +28,7 @@ func SaveImage(fileURL string) {
 func fullScreenshot(url string, res *[]byte) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Navigate(url),
-		chromedp.WaitVisible(`body`, chromedp.ByQuery),
+		chromedp.WaitVisible(`body > div.container > div.item`, chromedp.ByQuery),
 		chromedp.FullScreenshot(res, 90),
 	}
 }

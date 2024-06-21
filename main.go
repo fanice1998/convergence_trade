@@ -11,7 +11,7 @@ import (
 	"github.com/common"
 )
 
-func readData(path string) (kd []common.KlineData) {
+func ReadData(path string) (kd []common.KlineData) {
 	// 讀取指定路徑下的資料夾，並取得此位置路徑所有檔案
 	files, err := os.ReadDir(path)
 	if err != nil {
@@ -69,7 +69,7 @@ func readData(path string) (kd []common.KlineData) {
 func main() {
 	// data.DownloadData("kline", "ETHUSDT", "1h")
 
-	var kd = readData("./ETHUSDT/1h")
+	var kd = ReadData("./ETHUSDT/1h")
 
 	ch := chart.KlineExamples{}
 	ch.Chart(kd)
