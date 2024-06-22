@@ -75,4 +75,5 @@ func main() {
 	ch.Chart(kd)
 
 	// zigzag.TestGOGO(kd)
+	fmt.Println("Done")
 }
